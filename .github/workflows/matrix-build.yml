@@ -1,0 +1,51 @@
+name: Matrix Build with Artifacts (d414b1c)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    # runs three variants in parallel using a simple matrix of Node versions
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: [14, 16, 18]   # <-- three variants (changeable)
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: matrix-d414b1c
+        # step identifier required by the challenge
+        run: |
+          echo "matrix identifier found: matrix-d414b1c"
+          echo "Building on runner: $RUNNER_OS"
+          echo "Matrix version: ${{ matrix.version }}"
+
+      - name: Set up Node (optional, shows realistic build)
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.version }}
+
+      - name: Generate build artifact
+        run: |
+          # create an artifact file with identifying, non-empty content
+          FILE="build-output-v${{ matrix.version }}.txt"
+          echo "Build artifact for variant: v${{ matrix.version }}" > "$FILE"
+          echo "Runner: $RUNNER_OS" >> "$FILE"
+          echo "Matrix: ${{ toJson(matrix) }}" >> "$FILE"
+          echo "Timestamp: $(date --iso-8601=seconds)" >> "$FILE"
+          # optional extra: include a short random id
+          echo "BuildID: $(uuidgen || echo $RANDOM)" >> "$FILE"
+          # show file contents for logs
+          echo "---- artifact contents ----"
+          cat "$FILE"
+          ls -l "$FILE"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-d414b1c-v${{ matrix.version }}
+          path: build-output-v${{ matrix.version }}.txt
